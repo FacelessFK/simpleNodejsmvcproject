@@ -1,0 +1,74 @@
+const Product = require("../models/product");
+
+exports.getAddProduct = (req, res, next) => {
+    res.render("admin/edit-product", {
+        pageTitle: "Add Product",
+        path: "/admin/add-product",
+        editing: false
+    });
+};
+
+exports.postAddProduct = (req, res, next) => {
+    const title = req.body.title;
+    const imageUrl = req.body.imageUrl;
+    const price = req.body.price;
+    const description = req.body.description;
+    // khob chon ma be model ezafe kardim ke id ham begire chon inja darim ye product jadid midim beja id null midim
+    const product = new Product(null, title, imageUrl, description, price);
+    product.save();
+    res.redirect("/");
+};
+
+exports.getEditProduct = (req, res, next) => {
+    const editMod = req.query.edit;
+    if (!editMod) {
+        console.log("here");
+        return res.redirect("/");
+    }
+    // aval bia id oon product khas ro az route getEditProduct ke ba :productId moshakhas kardim begir bas bia bebin tu jaii ke product haro zakhire kardim prodacti ba oon id hast age pidash kone varede call back fn ke tu findById hast mishe va ma mitonim kari ke mikhaim ro bahash bokonim ke tu inja render kardan
+    const prodId = req.params.productId;
+    Product.findById(prodId, (product) => {
+        if (!product) return res.redirect("/");
+        res.render("admin/edit-product", {
+            pageTitle: "Edit Product",
+            path: "/admin/edit-product",
+            editing: editMod,
+            product: product
+        });
+    });
+};
+
+exports.postEditProduct = (req, res, next) => {
+    // khob bara edit kardan ma id ro ba body parser migirim hamrah ba baghie etelaaat va dobare be obj Product pass midim chon indafe id ham dare va id null nist pass tebghe chizi ke moshakhas kardim miad va update mikone va dobare ba seda zadan method save oono save mikone
+    const prodId = req.body.productId;
+    const updateTitle = req.body.title;
+    const updateImageUrl = req.body.imageUrl;
+    const updatePrice = req.body.price;
+    const updateDescription = req.body.description;
+    const updatedProduct = new Product(
+        prodId,
+        updateTitle,
+        updateImageUrl,
+        updateDescription,
+        updatePrice
+    );
+    updatedProduct.save();
+    // khob chon hich rederi chizi nakrdim va hich responsi nemigire ma migim ke bargarde be admin chon nemikhaim ke aslan kar digeii kone
+    res.redirect("/admin/products");
+};
+
+exports.getDeleteProduct = (req, res, next) => {
+    const prodId = req.body.productId;
+    Product.delete(prodId);
+    res.redirect("/admin/products");
+};
+
+exports.getProducts = (req, res, next) => {
+    Product.fetchAll((products) => {
+        res.render("admin/products", {
+            prods: products,
+            pageTitle: "Admin Products",
+            path: "/admin/products"
+        });
+    });
+};
